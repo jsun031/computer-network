@@ -20,7 +20,7 @@ def listening(rc_msg):
 
 		
 def main_menu(status,s,unread_msg):
-	num=int(raw_input('main menu:\n1. see offline messages\n2. edit subscriptions\n3. post a message\n4. hashtag search\n5.logout\n'))
+	num=int(raw_input('main menu:\n1. see offline messages\n2. edit subscriptions\n3. post a message\n4. hashtag search\n5. see follower\n6. logout\n'))
 	#listening(s)
         if (num==1):
                 msg=offline_msg(s,unread_msg)
@@ -31,13 +31,31 @@ def main_menu(status,s,unread_msg):
         elif (num==4):
                 msg=hashtag_search(s)
         elif (num==5):
+                see_follower(s)
+        elif (num==6):
 		s.sendall(str(0))
                 sys.exit(0)
 	else :
 		print 'Please input a number between 1 and 4';
 		main_menu(status,s,unread_msg)
         return status
-
+def see_follower(s):
+	s.sendall(str(6))
+	rc_msg=s.recv(1024)
+	#print rc_msg
+	show=''
+	subscriber=[]
+	od=1
+	print'Your followee:'
+	for a in rc_msg[2:]:
+		if(a!='/'):
+			show=show+a
+		elif(a=='/'):
+			print str(od)+':'+show
+			subscriber.append(show)
+			show=''
+			od=od+1
+	
 def offline_msg(s,unread_msg):#msg_type 2
 	num=0
 	if(unread_msg==0):

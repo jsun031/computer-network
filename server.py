@@ -250,6 +250,14 @@ def twitter(conn):
 						snd_msg=snd_msg+'/'+str(a.content)+'^'+str(a.author.name)+'&'+str(a.hashtag)
 			snd_msg=snd_msg+'/'
 			conn.sendall(snd_msg)
+		elif(int(rc[0])==6):
+			snd_msg=str(6)
+			for a in user.keys():
+				for b in user[a].u_follow:
+					if(username==b.name):
+						snd_msg=snd_msg+'/'+str(user[a].name)
+			snd_msg=snd_msg+'/'
+			conn.sendall(snd_msg)
 	print 'clear'
 	user[username].online=0
 	user[username].conn=None
