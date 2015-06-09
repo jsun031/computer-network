@@ -88,7 +88,7 @@ def clientthread(conn):
 	connectList.remove(conn)
 
 def twitter(conn):
-	print 'in twitter'
+	#print 'in twitter'
 	rc=conn.recv(1024)
 	msg_type=rc[0:1]
 	msg=rc[1:]
@@ -96,7 +96,7 @@ def twitter(conn):
 	username=''
 	password=''
 	if(int(msg_type)==1):
-		print'msg_type1 succ: '+msg
+		#print'msg_type1 succ: '+msg
 		inname=1
 		pswd=''
 		for x in msg[0:]:
@@ -111,6 +111,7 @@ def twitter(conn):
 			#print'in for username: '+username+' inname: '+str(inname)
 		if username in user.keys():
 			pswd=user[username].pswd
+			pswd[::-1]
 			if(pswd==password):
 				status=1
 				user[username].conn=conn
@@ -126,17 +127,17 @@ def twitter(conn):
 		conn.sendall(rply_msg)	
 	while(status==1):		
 		rc=conn.recv(1024)
-		print 'always here rc msg is '+rc
+		#print 'always here rc msg is '+rc
 		msg_type=rc[0]
 		snd_msg=''
-		print 'receive message: '+rc
+		#print 'receive message: '+rc
 		if(int(rc[0])==2):#msg_type 2
 			if(int(rc[1])==1):#msg type 21
 				snd_msg=str(21)
 	 			for a in user[username].msg:
 					snd_msg=snd_msg+'/'+str(a.content)+'^'+str(a.author.name)+'&'+str(a.hashtag)
 				snd_msg=snd_msg+str('/')
-				print snd_msg
+				#print snd_msg
 				conn.sendall(snd_msg)
 			elif(int(rc[1])==2):#msg_type 22
 				snd_msg=str(22)
@@ -146,10 +147,10 @@ def twitter(conn):
 					for a in user[username].u_follow:
 						snd_msg=snd_msg+str('/')+str(a.name)
 					snd_msg=snd_msg+str('/')
-					print snd_msg
+					#print snd_msg
 					conn.sendall(snd_msg)
 				elif(int(rc[2])==1):#msg_type 221
-					print '221'
+					#print '221'
 					snd_msg=snd_msg+str(1)
 					choice=int(rc[3:])
 					od=0
@@ -163,7 +164,7 @@ def twitter(conn):
 						if (a.author.name==interest_name):
 							snd_msg=snd_msg+'/'+str(a.content)+'^'+str(a.author.name)+'&'+str(a.hashtag)
 					snd_msg=snd_msg+str('/')
-					print snd_msg
+					#print snd_msg
 					conn.sendall(snd_msg)
 		elif(int(rc[0])==3):
 			snd_msg=str(3)
@@ -175,34 +176,32 @@ def twitter(conn):
 						print b
 						snd_msg=snd_msg+str('/')+str(b.name)
 					snd_msg=snd_msg+str('/')
-					print 'send: '+snd_msg+' '+str(len(snd_msg))
+					#print 'send: '+snd_msg+' '+str(len(snd_msg))
 					conn.sendall(snd_msg)
 				elif(int(rc[2])==1):#311 choice to delete
 					print rc
 					choice=int(rc[3:])
 					user[username].u_follow.pop(choice)
-					print user[username].u_follow						
+					#print user[username].u_follow						
 			elif(int(rc[1])==2):
 				if(int(rc[2])==0):
-					print '320'
+					#print '320'
 					snd_msg=snd_msg+str(20)#320
 					for b in user.keys():
 						snd_msg=snd_msg+'/'+b
 					snd_msg=snd_msg+'/'
-					print snd_msg
 					conn.sendall(snd_msg)
 				elif(int(rc[2])==1):#321 choice to delete
-					print rc
+					#print rc
 					choice=int(rc[3:])
-					print 'choice is '+str(choice)
+					#print 'choice is '+str(choice)
 					od=0
 					for a in user.keys():
-						print a+' '+ username
+						#print a+' '+ username
 						if(od==choice and not a in user[username].u_follow and a!=username):
 							user[username].u_follow.append(user[a])
-							print'add it' 
+						#	print'add it' 
 						od=od+1
-					print user[username].u_follow						
 		elif(int(rc[0])==4):#4
 			msg=rc[1:]
 			msg=re.sub('\n','',msg)
@@ -220,13 +219,9 @@ def twitter(conn):
 			msgs.append(msgtmp)
 			print msgs
 			for a in user.keys():
-				#print 'a '+user[a].name
 				for b in user[a].u_follow :
-					#print 'b '+b.name
 					if (b.name==username):
-						#print '= ,username:'+username#+' b.conn'+b.conn
 						if(user[a].conn==None):
-						#	print 'stored'
 							user[a].msg.append(msgtmp)
 							user[a].unread=user[a].unread+1
 						else:
@@ -263,16 +258,34 @@ def twitter(conn):
 	user[username].conn=None
 	user[username].unread=0
 	user[username].msg=[]
+def admin():
+	while 1:
+		choice=int(raw_input('main menu:\n1. messagecount\n2. usercount\n3. store messages\n4. new account\n'))
+		if(choice==1):
+			for a in msgs:
+				print a.content+' from '+a.author.name+' hashtag: '+a.hashtag
+		elif(choice==2):
+			print 'online usercount'
+			for a in user.keys():
+				if (user[a].conn!=None):
+					print user[a].name
+		elif(choice==3):
+			for a in user.keys():
+				if(user[a].conn==None):
+					print user[a].name+': '+str(user[a].unread)+' messages'
+		elif(choice==4):
+			name=raw_input('input account name: ')
+			name=re.sub('\n$','',name)
+			password=raw_input('input password name: ')
+			password=re.sub('\n$','',password)
+			user[name]=User(name,password)
+			print 'input success'
+start_new_thread(admin,())
 #now keep talking with the client
 while 1:
 	#wait to accpt a connection - blocking call
 	conn, addr= s.accept()
 	connectList.append(conn)
-
-	#display client information
-	print 'Connected with ' + addr[0] + ':' + str(addr[1])
-
-	#start new thread takes 1st argument as a function name to sun, second is the tuple of arguments to the function.
 	start_new_thread(twitter,(conn,))
 
 s.close()

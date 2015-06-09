@@ -1,7 +1,8 @@
 import socket #for sockets
 import sys #for exit
 import re
-
+import select
+import getpass
 def listening(rc_msg):
 	show=''
 	od=1
@@ -20,7 +21,30 @@ def listening(rc_msg):
 
 		
 def main_menu(status,s,unread_msg):
-	num=int(raw_input('main menu:\n1. see offline messages\n2. edit subscriptions\n3. post a message\n4. hashtag search\n5. see follower\n6. logout\n'))
+	#inputs=[s]
+	#outputs=[]
+	#timeout=1
+	#readable,writable,exceptional=select.select(inputs,outputs,inputs,timeout)
+        #for s in readable:
+	#	#receive data from client (data, addr)
+        #        rc=s.recvfrom(1024)
+	#	while(int(rc[0])==4):
+	#		rc_msg= s.recv(1024)
+	#		print 'message:'	
+	#		show=''
+	#		od=1
+	#		for a in rc_msg[2:]:
+	#		if(a!='/' and a!='^' and a!='&' ):
+	#			show=show+str(a)
+	#		elif(a=='^'):
+	#			show=(show)+' from '
+	#		elif(a=='&'):
+	#			show=show+' hashtag: '
+	#		elif(a=='/'):
+	#			print str(od)+':'+show
+	#			show=''
+	#			od=od+1
+	num=int(raw_input('main menu:\n1. see messages\n2. edit followee\n3. post a message\n4. hashtag search\n5. see follower\n6. logout\n'))
 	#listening(s)
         if (num==1):
                 msg=offline_msg(s,unread_msg)
@@ -39,6 +63,7 @@ def main_menu(status,s,unread_msg):
 		print 'Please input a number between 1 and 4';
 		main_menu(status,s,unread_msg)
         return status
+
 def see_follower(s):
 	s.sendall(str(6))
 	rc_msg=s.recv(1024)
@@ -64,14 +89,9 @@ def offline_msg(s,unread_msg):#msg_type 2
 		while(num!=1 and num!=2 and num !=3):
 			num=int(raw_input('offline message menu:\n1. see all messages\n2. see messages from someone\n3. go back to main menu\n'))
 			msg=str(2)+str(num)
-			#print str(num)+' send succ'
 			if(num==1):#msg_type 21
-				#print 'in 1 '+msg
 				s.sendall(msg)
 				rc_msg= s.recv(1024)
-				#print rc_msg
-				#if(int(rc_msg[0])==4):
-				#	listening(rc_msg)
 				print 'message:'	
 				show=''
 				od=1
@@ -256,8 +276,9 @@ while (log_in!=0):
 	msg_type=1#log in msg
 	acc=raw_input('welcome!\naccount name:')
 	acc=re.sub('\n$','',acc)
-	code=raw_input('password:')
+	code=getpass.getpass('password:')
 	code=re.sub('\n$','',code)
+	code[::-1]
 	msg=str(msg_type)+acc+'!'+code
 	try :
 		#Set the whole string
